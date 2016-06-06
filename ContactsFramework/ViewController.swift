@@ -14,6 +14,9 @@ class ViewController: UIViewController,UITableViewDataSource, UITableViewDelegat
     
     var allContacts:[CNContact] = []
     var contacts:[CNContact] = []
+    var orderedContacts = [String:[CNContact]]() //Contacts ordered by lastName
+    var contactIndex = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".characters.map { String($0)}
+    var sortedKeys = [String]()
 
     @IBOutlet weak var tableView: UITableView!
     
@@ -36,8 +39,45 @@ class ViewController: UIViewController,UITableViewDataSource, UITableViewDelegat
         for contact in allContacts {
             if contact.givenName != "" {
                 contacts.append(contact)
+                
+                var firstLetter:String = "#"
+                
+                if contact.familyName != "" {
+                    firstLetter = getKey(String(contact.familyName[contact.familyName.startIndex]).uppercaseString)
+                    
+                    
+                    print("Adding contact: \(contact.givenName) with key: \(firstLetter)")
+                    
+                    if self.orderedContacts[firstLetter] == nil {
+                        self.orderedContacts[firstLetter] = []
+                    }
+                    self.orderedContacts[firstLetter]?.append(contact)
+                }
             }
-            
+        }
+        
+        //Store all keys from the dictionary in an ordered manner
+        sortedKeys = Array(self.orderedContacts.keys).sort(<)
+        if sortedKeys[0] == "#" {
+            sortedKeys.removeAtIndex(0)
+            sortedKeys.append("#")
+        }
+        print(sortedKeys)
+        
+    }
+    
+    func getKey(inpString: String) -> String {
+        let letters = NSCharacterSet.letterCharacterSet()
+        let range = inpString.rangeOfCharacterFromSet(letters)
+        
+        // range will be nil if no letters is found
+        if range != nil {
+            //print("letters found")
+            return inpString
+        }
+        else {
+            //print("letters not found")
+            return "#"
         }
     }
     
@@ -79,10 +119,12 @@ class ViewController: UIViewController,UITableViewDataSource, UITableViewDelegat
         // Dispose of any resources that can be recreated.
     }
     
-    func getDisplayName(index:Int)->NSAttributedString {
+    func getDisplayName(indexPath:NSIndexPath)->NSAttributedString {
         
-        let firstName = self.contacts[index].givenName
-        let lastName  = self.contacts[index].familyName
+        let key = sortedKeys[indexPath.section]
+        
+        let firstName = self.orderedContacts[key]![indexPath.row].givenName
+        let lastName  = self.orderedContacts[key]![indexPath.row].familyName
         let fullName  = firstName + " " + lastName
         let displayName = makeBold(fullName, location: firstName.characters.count+1, length: lastName.characters.count)
         
@@ -104,9 +146,13 @@ class ViewController: UIViewController,UITableViewDataSource, UITableViewDelegat
         return attributedString
     }
     
+    func tableView(tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        return sortedKeys[section]
+    }
 
     func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return contacts.count
+        let key = sortedKeys[section]
+        return orderedContacts[key]?.count ?? 0
     }
     
     
@@ -114,11 +160,24 @@ class ViewController: UIViewController,UITableViewDataSource, UITableViewDelegat
         
     
         let cell = tableView.dequeueReusableCellWithIdentifier("tableCell", forIndexPath: indexPath)
-        let displayName = getDisplayName(indexPath.row)
+        let displayName = getDisplayName(indexPath)
         cell.textLabel!.attributedText = displayName
         
         return cell
         
+    }
+    
+    func numberOfSectionsInTableView(tableView: UITableView) -> Int {
+        return sortedKeys.count ?? 0
+    }
+    
+    func sectionIndexTitlesForTableView(tableView: UITableView) -> [String]? {
+        return sortedKeys
+    }
+    
+    func tableView(tableView: UITableView, sectionForSectionIndexTitle title: String, atIndex index: Int) -> Int {
+        let section = (sortedKeys.indexOf(title)) ?? 0
+        return section
     }
     
 
