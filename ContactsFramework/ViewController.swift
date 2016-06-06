@@ -46,7 +46,7 @@ class ViewController: UIViewController,UITableViewDataSource, UITableViewDelegat
                     firstLetter = getKey(String(contact.familyName[contact.familyName.startIndex]).uppercaseString)
                     
                     
-                    print("Adding contact: \(contact.givenName) with key: \(firstLetter)")
+                    //print("Adding contact: \(contact.givenName) with key: \(firstLetter)")
                     
                     if self.orderedContacts[firstLetter] == nil {
                         self.orderedContacts[firstLetter] = []
@@ -62,7 +62,7 @@ class ViewController: UIViewController,UITableViewDataSource, UITableViewDelegat
             sortedKeys.removeAtIndex(0)
             sortedKeys.append("#")
         }
-        print(sortedKeys)
+        //print(sortedKeys)
         
     }
     
